@@ -238,7 +238,7 @@ if df is not None and chosen_display_name != "--- اختر ---":
     col_info, col_img = st.columns([1.4, 1])
     
     with col_info:
-        st.markdown('<div class="custom-top-bar">📝 معلومات الصورة والوصف الفني</div>', unsafe_allow_html=True)
+        st.markdown('<div class="custom-top-bar">📝 معلومات الصورة والوصف الفني</div>', unsafe_allow_bar=True)
         st.markdown('<div class="green-info-box">', unsafe_allow_html=True)
         st.markdown(f'<div class="main-title-green">{item_title}</div>', unsafe_allow_html=True)
         st.markdown('<div class="details-header-green">المواصفات الفنية المطلوبة</div>', unsafe_allow_html=True)
@@ -263,7 +263,9 @@ if df is not None and chosen_display_name != "--- اختر ---":
         
         raw_id = str(item_data.iloc[0]).strip().replace("/", "-")
         base_dir = os.path.dirname(os.path.abspath(__file__))
-        img_p = os.path.join(base_dir, "images", f"{raw_id}.jpg")
+        
+        # 🎯 السطر المعدل: يقرأ الصور من المجلد الرئيسي مباشرة (بجانب الملفات)
+        img_p = os.path.join(base_dir, f"{raw_id}.jpg")
         
         if os.path.exists(img_p):
             st.image(img_p, use_container_width=True)
@@ -271,7 +273,7 @@ if df is not None and chosen_display_name != "--- اختر ---":
             st.warning(f"⚠️ الصورة غير متوفرة في المسار المحدد للمادة.")
         st.markdown('</div>', unsafe_allow_html=True)
 
-    # 🛠️ زر جيميناي ممتد ومكتوب بالصيغة المطلوبة وملتصق بأسفل الصناديق مباشرة
+    # 🛠️ زر جيميناي ممتد ومكتب بالصيغة المطلوبة وملتصق بأسفل الصناديق مباشرة
     if st.button(f"✨ هل ترغب في معلومات أكثر عن استخدامات ({item_title})؟", use_container_width=True):
         with st.spinner("جاري الاتصال بـ Gemini وجلب المعلومات الدقيقة ممتدة العرض..."):
             try:
