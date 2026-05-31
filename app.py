@@ -1,17 +1,19 @@
 import streamlit as st
 import pandas as pd
 import os
-import urllib.parse
 import google.generativeai as genai
 
-# تم ضبط تهيئة المفتاح وتفعيل البحث الذكي عن النموذج المدعوم تلقائياً
-MY_API_KEY = "AIzaSyBKvBYlXKCsfkshd7TyHf6FJV84xHH2BUQ"
-genai.configure(api_key=MY_API_KEY)
+# جلب مفتاح الأمان بشكل مخفي وآمن لمنع التسريب وحظر الخدمة
+try:
+    MY_API_KEY = st.secrets["GEMINI_API_KEY"]
+    genai.configure(api_key=MY_API_KEY)
+except Exception:
+    st.warning("⚠️ يرجى ضبط مفتاح الـ API في إعدادات Streamlit Secrets لتفعيل ميزة الذكاء الاصطناعي.")
 
 # 1. إعداد الصفحة
 st.set_page_config(page_title="نظام مختبر مدرسة النهضة الثانوية للبنين", layout="wide")
 
-# 2. التنسيق الجمالي المطور (CSS) - الهوية الجديدة باللون الأخضر الفاتح والمريح
+# 2. التنسيق الجمالي المطور (CSS) - الحفاظ التام على الخطوط الكبيرة والهوية البصرية
 st.markdown("""
     <style>
     html, body, [data-testid="stAppViewContainer"] {
@@ -76,11 +78,11 @@ st.markdown("""
         padding-bottom: 3px; font-weight: bold;
     }
 
-    /* 🟢 صفوف البيانات البيضاء - تم تكبير الخط لـ 1.5rem وإضافة مسافة أمان عن الحافة اليمنى */
+    /* صفوف البيانات البيضاء بجماليتها وحجمها الكبير المعتمد */
     .data-row-green {
         background: white !important;
         padding: 15px 25px !important; 
-        padding-right: 1cm !important; /* مسافة أمان صغيرة لإبعاد النص عن الحافة اليمنى */
+        padding-right: 1cm !important; 
         margin-bottom: 12px;
         border-radius: 10px; 
         display: flex; 
@@ -88,15 +90,13 @@ st.markdown("""
         box-shadow: 0 2px 5px rgba(0,0,0,0.02);
     }
     
-    /* تكبير خط العناوين الفرعية (مثل: اسم الصنف:) */
     .data-label-green { 
         color: #2e6930 !important; 
         font-weight: bold !important; 
-        min-width: 280px !important; /* زيادة العرض ليتناسق مع الخط الكبير الجديد ويمسك مكانه */
+        min-width: 280px !important; 
         font-size: 2rem !important;   
     }
     
-    /* تكبير خط القيم (مثل: ترمومتر مئوي...) */
     .data-value-green { 
         color: #334135 !important; 
         font-size: 2rem !important;   
@@ -111,40 +111,38 @@ st.markdown("""
         text-align: center;
         margin-bottom: 15px;
     }
-    .image-border { border-radius: 12px; overflow: hidden; border: 1px solid #e2ece6; }
     
-    /* 🎯 تنسيق صندوق إجابة جيميناي ممتد العرض (تم ضبط الخط والمحاذاة والمسافة البادئة للنتائج فقط) */
+    /* تنسيق صندوق إجابة جيميناي ممتد العرض والخط الكبير */
     .gemini-response-box {
         background-color: #ffffff;
         padding: 25px;
-        padding-right: 1.5cm !important; /* مسافة بادئة آمنة 1.5 سم من حافة الصفحة اليمنى */
-        text-align: right !important;    /* إجبار النص على محاذاة اليمين بالكامل */
+        padding-right: 1.5cm !important; 
+        text-align: right !important;    
         border-radius: 15px;
         border-right: 8px solid #0066cc;
         box-shadow: 0 6px 20px rgba(0,0,0,0.05);
         margin-top: 15px;
         width: 100%;
         color: black !important;
-        font-size: 2.15rem !important;   /* حجم خط نتائج جيميناي الكبير والمطلوب */
+        font-size: 2.15rem !important;   
         line-height: 2.6 !important;
     }
 
-    /* 🧠 التنسيق الاحترافي الكامل للزر الأزرق الممتد والملتصق بالكامل من الأسفل */
+    /* التنسيق للزر الأزرق الممتد والملتصق من الأسفل */
     div.stButton > button:first-child {
         background-color: #0066cc !important;
         color: #ffffff !important;
-        font-size: 2rem !important;       /* ضبط خط حافة الزر بـ 2rem */
+        font-size: 2rem !important;       
         font-weight: bold !important;
         border-radius: 0px 0px 8px 8px !important;
         border: none !important;
         padding: 12px 0px !important;
         margin-top: 0px !important;
-        height: auto !important;          /* إعطاء مساحة للزر ليتسع للخط الكبير */
+        height: auto !important;          
     }
     
-    /* إجبار النص الداخلي للزر بكل مستوياته وعناصره الفرعية على أخذ حجم 2rem */
     div.stButton > button:first-child * {
-        font-size: 2rem !important;       /* إجبار النص المكتوب داخل الزر على مقاس 2rem */
+        font-size: 2rem !important;       
         color: #ffffff !important;
         font-weight: bold !important;
     }
@@ -158,9 +156,9 @@ st.markdown("""
         color: #ffffff !important;
     }
     </style>
-    """, unsafe_allow_html=True)
+""", unsafe_allow_html=True)
 
-# 3. دالة جلب البيانات المعدلة للبحث في مسار السكريبت المباشر
+# 3. دالة جلب البيانات من مسار السكريبت المباشر
 def load_data(prefix):
     base_dir = os.path.dirname(os.path.abspath(__file__))
     files = [f for f in os.listdir(base_dir) if f.lower().startswith(prefix.lower())]
@@ -238,7 +236,6 @@ if df is not None and chosen_display_name != "--- اختر ---":
     col_info, col_img = st.columns([1.4, 1])
     
     with col_info:
-        # 🛠️ هنا تم التعديل لمنع ظهور الخطأ البرمجي في واجهة الاستخدام
         st.markdown('<div class="custom-top-bar">📝 معلومات الصورة والوصف الفني</div>', unsafe_allow_html=True)
         st.markdown('<div class="green-info-box">', unsafe_allow_html=True)
         st.markdown(f'<div class="main-title-green">{item_title}</div>', unsafe_allow_html=True)
@@ -265,7 +262,6 @@ if df is not None and chosen_display_name != "--- اختر ---":
         raw_id = str(item_data.iloc[0]).strip().replace("/", "-")
         base_dir = os.path.dirname(os.path.abspath(__file__))
         
-        # 🎯 السطر المعدل: يقرأ الصور من المجلد الرئيسي مباشرة (بجانب الملفات)
         img_p = os.path.join(base_dir, f"{raw_id}.jpg")
         
         if os.path.exists(img_p):
@@ -274,26 +270,25 @@ if df is not None and chosen_display_name != "--- اختر ---":
             st.warning(f"⚠️ الصورة غير متوفرة في المسار المحدد للمادة.")
         st.markdown('</div>', unsafe_allow_html=True)
 
-    # 🛠️ زر جيميناي ممتد ومكتب بالصيغة المطلوبة وملتصق بأسفل الصناديق مباشرة
+    # تفعيل طلب الذكاء الاصطناعي بشكل سليم
     if st.button(f"✨ هل ترغب في معلومات أكثر عن استخدامات ({item_title})؟", use_container_width=True):
-        with st.spinner("جاري الاتصال بـ Gemini وجلب المعلومات الدقيقة ممتدة العرض..."):
-            try:
-                available_models = [m.name for m in genai.list_models() if 'generateContent' in m.supported_generation_methods]
-                
-                if available_models:
-                    selected_model_name = available_models[0]
-                    model = genai.GenerativeModel(selected_model_name)
-                    prompt = f"أنت خبير مختبرات علمية متميز، اشرح لي بالتفصيل وبنقاط واضحة ومنسقة باللغة العربية استخدامات '{item_title}' في مختبر المدرسة، والفوائد التعليمية، والتحذيرات الأساسية للسلامة العامة عند التعامل معه."
-                    response = model.generate_content(prompt)
-                    
-                    st.success("🤖 إجابة Google Gemini الكاملة ممتدة العرض:")
-                    st.markdown(f'<div class="gemini-response-box">{response.text}</div>', unsafe_allow_html=True)
-                else:
-                    st.error("لم يتم العثور على أي نماذج توليد نصوص مدعومة في هذا الإصدار.")
-                
-            except Exception as e:
-                st.error(f"حدث خطأ أثناء الاتصال بـ Gemini: {str(e)}")
-
+        if "GEMINI_API_KEY" not in st.secrets:
+            st.error("❌ عذراً، يجب إدخال مفتاح GEMINI_API_KEY في إعدادات التطبيق أولاً لتشغيل هذه الميزة.")
+        else:
+            with st.spinner("جاري الاتصال بـ Gemini وجلب المعلومات الدقيقة ممتدة العرض..."):
+                try:
+                    available_models = [m.name for m in genai.list_models() if 'generateContent' in m.supported_generation_methods]
+                    if available_models:
+                        model = genai.GenerativeModel(available_models[0])
+                        prompt = f"أنت خبير مختبرات علمية متميز، اشرح لي بالتفصيل وبنقاط واضحة ومنسقة باللغة العربية استخدامات '{item_title}' في مختبر المدرسة، والفوائد التعليمية، والتحذيرات الأساسية للسلامة العامة عند التعامل معه."
+                        response = model.generate_content(prompt)
+                        
+                        st.success("🤖 إجابة Google Gemini الكاملة ممتدة العرض:")
+                        st.markdown(f'<div class="gemini-response-box">{response.text}</div>', unsafe_allow_html=True)
+                    else:
+                        st.error("لم يتم العثور على أي نماذج توليد نصوص مدعومة.")
+                except Exception as e:
+                    st.error(f"حدث خطأ أثناء الاتصال بـ Gemini: {str(e)}")
 else:
     welcome_msg = "يرجى اختيار <b>نوع السجل</b> ثم استخدام صندوق <b>البحث</b> أو اختر مباشرة من <b>قائمة النتائج</b> بالأعلى لعرض مواصفات الأصناف الكيميائية والعامة وصورها المخزنة فوراً."
     if df is None:
