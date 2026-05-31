@@ -3,17 +3,18 @@ import pandas as pd
 import os
 import google.generativeai as genai
 
-# جلب مفتاح الأمان بشكل مخفي وآمن لمنع التسريب وحظر الخدمة
+# جلب مفتاح الأمان بشكل مخفي وآمن لمنع الحظر والتسريب
 try:
-    MY_API_KEY = st.secrets["GEMINI_API_KEY"]
-    genai.configure(api_key=MY_API_KEY)
+    if "GEMINI_API_KEY" in st.secrets:
+        MY_API_KEY = st.secrets["GEMINI_API_KEY"]
+        genai.configure(api_key=MY_API_KEY)
 except Exception:
-    st.warning("⚠️ يرجى ضبط مفتاح الـ API في إعدادات Streamlit Secrets لتفعيل ميزة الذكاء الاصطناعي.")
+    pass
 
 # 1. إعداد الصفحة
 st.set_page_config(page_title="نظام مختبر مدرسة النهضة الثانوية للبنين", layout="wide")
 
-# 2. التنسيق الجمالي المطور (CSS) - الحفاظ التام على الخطوط الكبيرة والهوية البصرية
+# 2. التنسيق الجمالي المطور (CSS) - الحفاظ التام على الخطوط الكبيرة والهوية البصرية المعتمدة للنهضة
 st.markdown("""
     <style>
     html, body, [data-testid="stAppViewContainer"] {
@@ -21,11 +22,11 @@ st.markdown("""
     }
     [data-testid="stSidebar"] { display: none; }
 
-    /* تقليل مساحة الحاوية العلوية */
+    /* ضبط مساحات الحاوية العلوية */
     [data-testid="stHeader"] { height: 0px; }
     .main .block-container { padding-top: 1rem; padding-bottom: 1rem; }
 
-    /* شريط التحكم العلوي - أخضر مريح ومتدرج خفيف */
+    /* شريط التحكم العلوي - أخضر مريح */
     .stHorizontalBlock {
         background: linear-gradient(90deg, #3b7a57, #4caf50);
         padding: 12px 20px; border-radius: 15px; margin-bottom: 15px;
@@ -46,7 +47,7 @@ st.markdown("""
         font-size: 1.1rem !important; height: 40px !important; border-radius: 8px !important;
     }
 
-    /* تصميم الأشرطة العلوية - أخضر فاتح متناسق */
+    /* تصميم الأشرطة العلوية للمحتوى */
     .custom-top-bar {
         background-color: #4caf50; 
         color: white !important; 
@@ -78,7 +79,7 @@ st.markdown("""
         padding-bottom: 3px; font-weight: bold;
     }
 
-    /* صفوف البيانات البيضاء بجماليتها وحجمها الكبير المعتمد */
+    /* صفوف البيانات البيضاء بجماليتها وحجمها الكبير */
     .data-row-green {
         background: white !important;
         padding: 15px 25px !important; 
@@ -236,6 +237,7 @@ if df is not None and chosen_display_name != "--- اختر ---":
     col_info, col_img = st.columns([1.4, 1])
     
     with col_info:
+        # تصحيح الخطأ البرمجي في السطر التالي بإزالة unsafe_allow_bar
         st.markdown('<div class="custom-top-bar">📝 معلومات الصورة والوصف الفني</div>', unsafe_allow_html=True)
         st.markdown('<div class="green-info-box">', unsafe_allow_html=True)
         st.markdown(f'<div class="main-title-green">{item_title}</div>', unsafe_allow_html=True)
@@ -270,20 +272,21 @@ if df is not None and chosen_display_name != "--- اختر ---":
             st.warning(f"⚠️ الصورة غير متوفرة في المسار المحدد للمادة.")
         st.markdown('</div>', unsafe_allow_html=True)
 
-    # تفعيل طلب الذكاء الاصطناعي بشكل سليم
+    # نموذج استدعاء الذكاء الاصطناعي مع معالجة الاستثناءات
     if st.button(f"✨ هل ترغب في معلومات أكثر عن استخدامات ({item_title})؟", use_container_width=True):
         if "GEMINI_API_KEY" not in st.secrets:
-            st.error("❌ عذراً، يجب إدخال مفتاح GEMINI_API_KEY في إعدادات التطبيق أولاً لتشغيل هذه الميزة.")
+            st.warning("⚠️ عذراً، لم يتم ضبط مفتاح الاستدعاء الآمن في إعدادات Streamlit Secrets حتى الآن.")
         else:
-            with st.spinner("جاري الاتصال بـ Gemini وجلب المعلومات الدقيقة ممتدة العرض..."):
+            with st.spinner("جاري الاتصال بـ Gemini وجلب المعلومات الدقيقة..."):
                 try:
+                    # اختيار النموذج المناسب المتاح
                     available_models = [m.name for m in genai.list_models() if 'generateContent' in m.supported_generation_methods]
                     if available_models:
-                        model = genai.GenerativeModel(available_models[0])
+                        model = genai.GenerativeModel('gemini-1.5-flash')
                         prompt = f"أنت خبير مختبرات علمية متميز، اشرح لي بالتفصيل وبنقاط واضحة ومنسقة باللغة العربية استخدامات '{item_title}' في مختبر المدرسة، والفوائد التعليمية، والتحذيرات الأساسية للسلامة العامة عند التعامل معه."
                         response = model.generate_content(prompt)
                         
-                        st.success("🤖 إجابة Google Gemini الكاملة ممتدة العرض:")
+                        st.success("🤖 إجابة Google Gemini الكاملة:")
                         st.markdown(f'<div class="gemini-response-box">{response.text}</div>', unsafe_allow_html=True)
                     else:
                         st.error("لم يتم العثور على أي نماذج توليد نصوص مدعومة.")
