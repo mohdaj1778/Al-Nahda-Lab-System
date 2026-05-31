@@ -95,12 +95,12 @@ st.markdown("""
         color: #2e6930 !important; 
         font-weight: bold !important; 
         min-width: 280px !important; 
-        font-size: 2rem !important;   
+        font-size: 2rem !important;    
     }
     
     .data-value-green { 
         color: #334135 !important; 
-        font-size: 2rem !important;   
+        font-size: 2rem !important;    
         font-weight: bold !important; 
     }
 
@@ -118,14 +118,14 @@ st.markdown("""
         background-color: #ffffff;
         padding: 25px;
         padding-right: 1.5cm !important; 
-        text-align: right !important;    
+        text-align: right !important;     
         border-radius: 15px;
         border-right: 8px solid #0066cc;
         box-shadow: 0 6px 20px rgba(0,0,0,0.05);
         margin-top: 15px;
         width: 100%;
         color: black !important;
-        font-size: 2.15rem !important;   
+        font-size: 2.15rem !important;    
         line-height: 2.6 !important;
     }
 
@@ -237,7 +237,6 @@ if df is not None and chosen_display_name != "--- اختر ---":
     col_info, col_img = st.columns([1.4, 1])
     
     with col_info:
-        # تصحيح الخطأ البرمجي في السطر التالي بإزالة unsafe_allow_bar
         st.markdown('<div class="custom-top-bar">📝 معلومات الصورة والوصف الفني</div>', unsafe_allow_html=True)
         st.markdown('<div class="green-info-box">', unsafe_allow_html=True)
         st.markdown(f'<div class="main-title-green">{item_title}</div>', unsafe_allow_html=True)
@@ -279,17 +278,13 @@ if df is not None and chosen_display_name != "--- اختر ---":
         else:
             with st.spinner("جاري الاتصال بـ Gemini وجلب المعلومات الدقيقة..."):
                 try:
-                    # اختيار النموذج المناسب المتاح
-                    available_models = [m.name for m in genai.list_models() if 'generateContent' in m.supported_generation_methods]
-                    if available_models:
-                        model = genai.GenerativeModel('gemini-1.5-flash')
-                        prompt = f"أنت خبير مختبرات علمية متميز، اشرح لي بالتفصيل وبنقاط واضحة ومنسقة باللغة العربية استخدامات '{item_title}' في مختبر المدرسة، والفوائد التعليمية، والتحذيرات الأساسية للسلامة العامة عند التعامل معه."
-                        response = model.generate_content(prompt)
-                        
-                        st.success("🤖 إجابة Google Gemini الكاملة:")
-                        st.markdown(f'<div class="gemini-response-box">{response.text}</div>', unsafe_allow_html=True)
-                    else:
-                        st.error("لم يتم العثور على أي نماذج توليد نصوص مدعومة.")
+                    # تعديل السطر ليتوافق بدقة مع المسار والمفتاح الجديد المعتمد
+                    model = genai.GenerativeModel('models/gemini-1.5-flash')
+                    prompt = f"أنت خبير مختبرات علمية متميز، اشرح لي بالتفصيل وبنقاط واضحة ومنسقة باللغة العربية استخدامات '{item_title}' في مختبر المدرسة، والفوائد التعليمية، والتحذيرات الأساسية للسلامة العامة عند التعامل معه."
+                    response = model.generate_content(prompt)
+                    
+                    st.success("🤖 إجابة Google Gemini الكاملة:")
+                    st.markdown(f'<div class="gemini-response-box">{response.text}</div>', unsafe_allow_html=True)
                 except Exception as e:
                     st.error(f"حدث خطأ أثناء الاتصال بـ Gemini: {str(e)}")
 else:
